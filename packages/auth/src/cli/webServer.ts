@@ -6,6 +6,8 @@ import { URL } from "node:url";
 import type { WebServerArgs } from "./args";
 import { createUserError } from "../internal/userError";
 
+const WEB_SERVER_POLL_INTERVAL_MS = 250;
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -68,7 +70,7 @@ async function waitForUrl(url: string, timeoutMs: number): Promise<void> {
     const ok = await isUrlReachable(url);
     if (ok) return;
     // eslint-disable-next-line no-await-in-loop
-    await sleep(250);
+    await sleep(WEB_SERVER_POLL_INTERVAL_MS);
   }
   throw createUserError(`Timed out waiting for web server URL: ${url}`);
 }
