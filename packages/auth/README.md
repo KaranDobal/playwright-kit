@@ -31,6 +31,12 @@ The “Native Playwright” section below is intentional: it shows that after ge
 npm i -D @playwright-kit/auth
 ```
 
+With pnpm:
+
+```bash
+pnpm add -D @playwright-kit/auth
+```
+
 ## TL;DR (copy/paste)
 
 1) Add `playwright.auth.config.ts` (example below), then:
@@ -49,9 +55,15 @@ test.use({ storageState: ".auth/admin.json" });
 or the wrapper:
 
 ```ts
+import { authTest } from "@playwright-kit/auth";
+
 export const test = authTest({ defaultProfile: "user" });
 test.use({ auth: "admin" });
 ```
+
+Choose:
+- Native: simplest; you reference `.auth/<profile>.json` directly.
+- Wrapper: cleaner multi-profile switching via `test.use({ auth: "<profile>" })`.
 
 ## What you get
 
@@ -134,6 +146,18 @@ This keeps tests “pure”: auth refresh happens before Playwright tests run.
   "scripts": {
     "auth:ensure": "playwright-kit auth ensure --dotenv",
     "pretest": "npm run auth:ensure",
+    "test": "playwright test"
+  }
+}
+```
+
+With pnpm:
+
+```json
+{
+  "scripts": {
+    "auth:ensure": "playwright-kit auth ensure --dotenv",
+    "pretest": "pnpm run auth:ensure",
     "test": "playwright test"
   }
 }

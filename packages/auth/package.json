@@ -1,15 +1,15 @@
 {
   "name": "@playwright-kit/auth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Small, production-ready authentication utilities for Playwright.",
   "license": "MIT",
   "sideEffects": false,
   "bin": {
-    "playwright-kit": "./dist/bin/playwright-kit.js"
+    "playwright-kit": "dist/bin/playwright-kit.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/romradchenko/playwright-kit.git",
+    "url": "git+https://github.com/romradchenko/playwright-kit.git",
     "directory": "packages/auth"
   },
   "bugs": {
