@@ -5,19 +5,8 @@ import { resolveProfileCredentials } from "../credentials/resolveCredentials";
 import { resolveFailuresDir, resolveStatePath, resolveStatesDir } from "../state/paths";
 
 import { createRunId, writeFailureArtifacts } from "./artifacts";
+import { mergeLaunchOptions } from "./mergeLaunchOptions";
 import { resolveBaseURL, resolveValidateUrl } from "./resolveUrls";
-
-function mergeLaunchOptions(options: {
-  config: AuthConfig;
-  profile: AuthProfileConfig;
-  headed: boolean;
-}) {
-  return {
-    ...(options.config.launchOptions ?? {}),
-    ...(options.profile.launchOptions ?? {}),
-    headless: !options.headed,
-  };
-}
 
 export async function setupProfileState(options: {
   config: AuthConfig;

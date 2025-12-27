@@ -1,26 +1,14 @@
 import fs from "node:fs/promises";
 
 import type { AuthConfig, AuthProfileConfig } from "../config/types";
-import { resolveStatesDir, resolveStatePath } from "../state/paths";
+import { resolveFailuresDir, resolveStatePath, resolveStatesDir } from "../state/paths";
 import { readStorageStateJson } from "../state/readStorageState";
 
 import { createRunId, writeFailureArtifacts } from "./artifacts";
+import { mergeLaunchOptions } from "./mergeLaunchOptions";
 import { resolveBaseURL, resolveValidateUrl } from "./resolveUrls";
-import { resolveFailuresDir } from "../state/paths";
 
 export type ValidateResult = { ok: true } | { ok: false; reason: string };
-
-function mergeLaunchOptions(options: {
-  config: AuthConfig;
-  profile: AuthProfileConfig;
-  headed: boolean;
-}) {
-  return {
-    ...(options.config.launchOptions ?? {}),
-    ...(options.profile.launchOptions ?? {}),
-    headless: !options.headed,
-  };
-}
 
 export async function validateProfileState(options: {
   config: AuthConfig;
