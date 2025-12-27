@@ -24,8 +24,6 @@ export async function maybeLoadDotenv(options: {
 
   const result = dotenv.config(resolvedPath ? { path: resolvedPath } : undefined);
   if (result.error) {
-    const message = result.error instanceof Error ? result.error.message : String(result.error);
-    throw createUserError(`Failed to load .env: ${message}`);
+    throw createUserError(`Failed to load .env: ${result.error.message}`);
   }
 }
-
