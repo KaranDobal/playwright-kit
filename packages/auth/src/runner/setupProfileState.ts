@@ -1,8 +1,7 @@
-import fs from "node:fs/promises";
-
 import type { AuthConfig, AuthProfileConfig } from "../config/types";
 import { resolveProfileCredentials } from "../credentials/resolveCredentials";
 import { resolveFailuresDir, resolveStatePath, resolveStatesDir } from "../state/paths";
+import { writeFileAtomic } from "../state/writeStorageState";
 
 import { createRunId, writeFailureArtifacts } from "./artifacts";
 import { mergeLaunchOptions } from "./mergeLaunchOptions";
@@ -68,8 +67,8 @@ export async function setupProfileState(options: {
       throw new Error(`Validation failed for profile "${options.profileName}": ${result.reason}`);
     }
 
-    await fs.mkdir(statesDir, { recursive: true });
-    await context.storageState({ path: statePath });
+    const storageState = await context.storageState();
+    await writeFileAtomic(statePath, JSON.stringify(storageState, null, 2));
     return { statePath };
   } catch (error) {
     const runId = createRunId();

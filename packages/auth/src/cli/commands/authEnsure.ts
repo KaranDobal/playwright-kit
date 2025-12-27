@@ -2,6 +2,8 @@ import type { AuthConfigLoadResult } from "../../config/types";
 import { setupProfileState } from "../../runner/setupProfileState";
 import { validateProfileState } from "../../runner/validateProfileState";
 import { createUserError } from "../../internal/userError";
+import { resolveStatesDir } from "../../state/paths";
+import { withProfileLock } from "../../state/lock";
 
 export async function authEnsure(options: {
   loaded: AuthConfigLoadResult;
@@ -14,6 +16,10 @@ export async function authEnsure(options: {
 }): Promise<void> {
   const log = options.onLog ?? ((line: string) => console.log(line));
   const availableProfiles = Object.keys(options.loaded.config.profiles);
+  const statesDir = resolveStatesDir({
+    projectRoot: options.loaded.projectRoot,
+    statesDir: options.loaded.config.statesDir,
+  });
 
   const profileNames =
     options.profileNames && options.profileNames.length > 0
@@ -32,35 +38,44 @@ export async function authEnsure(options: {
 
   for (const profileName of profileNames) {
     const profile = options.loaded.config.profiles[profileName];
-    log(`auth ensure: validating "${profileName}"...`);
 
-    const validation = await validateProfileState({
-      config: options.loaded.config,
-      projectRoot: options.loaded.projectRoot,
-      profileName,
-      profile,
-      headed: options.headed,
-      browserName: options.browserName,
-    });
-
-    if (validation.ok) {
-      log(`auth ensure: "${profileName}" is valid; skipped.`);
-      continue;
+    if (!profile.validateUrl && !options.loaded.config.validateUrl) {
+      log(
+        `auth ensure: warning: "${profileName}" has no validateUrl; defaulting to "/" (set validateUrl to make validation deterministic).`,
+      );
     }
 
-    log(`auth ensure: "${profileName}" invalid (${validation.reason}); refreshing...`);
-
     try {
-      const { statePath } = await setupProfileState({
-        config: options.loaded.config,
-        projectRoot: options.loaded.projectRoot,
-        profileName,
-        profile,
-        headed: options.headed,
-        env: options.env,
-        browserName: options.browserName,
+      // Avoid concurrent processes corrupting/overwriting the same state file.
+      await withProfileLock({ statesDir, profile: profileName }, async () => {
+        log(`auth ensure: validating "${profileName}"...`);
+
+        const validation = await validateProfileState({
+          config: options.loaded.config,
+          projectRoot: options.loaded.projectRoot,
+          profileName,
+          profile,
+          headed: options.headed,
+          browserName: options.browserName,
+        });
+
+        if (validation.ok) {
+          log(`auth ensure: "${profileName}" is valid; skipped.`);
+          return;
+        }
+
+        log(`auth ensure: "${profileName}" invalid (${validation.reason}); refreshing...`);
+        const { statePath } = await setupProfileState({
+          config: options.loaded.config,
+          projectRoot: options.loaded.projectRoot,
+          profileName,
+          profile,
+          headed: options.headed,
+          env: options.env,
+          browserName: options.browserName,
+        });
+        log(`auth ensure: "${profileName}" refreshed -> ${statePath}`);
       });
-      log(`auth ensure: "${profileName}" refreshed -> ${statePath}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       log(`auth ensure: "${profileName}" failed: ${message}`);

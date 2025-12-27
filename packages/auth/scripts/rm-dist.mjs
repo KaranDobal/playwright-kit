@@ -11,10 +11,14 @@ async function exists(path) {
 
 const target = new URL("../dist", import.meta.url);
 
+let removed = false;
 for (let attempt = 1; attempt <= 5; attempt++) {
   try {
     await fs.rm(target, { recursive: true, force: true });
-    if (!(await exists(target))) process.exit(0);
+    if (!(await exists(target))) {
+      removed = true;
+      break;
+    }
   } catch {
     // ignore and retry
   }
@@ -22,5 +26,6 @@ for (let attempt = 1; attempt <= 5; attempt++) {
 }
 
 // Final attempt with an explicit error.
-await fs.rm(target, { recursive: true, force: true });
-
+if (!removed) {
+  await fs.rm(target, { recursive: true, force: true });
+}

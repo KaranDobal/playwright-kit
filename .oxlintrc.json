@@ -3,6 +3,11 @@
     "env": {
         "browser": true
     },
+    "ignorePatterns": [
+        "node_modules/**",
+        "packages/**/dist/**",
+        "examples/**"
+    ],
     "plugins": [
         "eslint",
         "typescript",
@@ -20,26 +25,22 @@
         "vitest"
     ],
     "categories": {
-        // "perf": "warn",
         "restriction": "error"
-        // "suspicious": "error",
-        // "pedantic": "warn",
-        // "style": "warn"
     },
     "rules": {
-        "no-undefined": "allow", // too strict
-        "no-plusplus": "allow", // too strict
-        "no-conditional-in-test": "allow", // too strict
-        "require-to-throw-message": "allow", // allow toThrow() without message for generic error tests
-        "no-async-await": "allow", // this is stupid
-        "no-rest-spread-properties": "allow", // this is stupid
-        "no-optional-chaining": "allow", // this is stupid
-        "no-process-env": "allow", // not applicable for nextjs
-        "prefer-tag-over-role": "allow", // this is stupid
+        "no-undefined": "allow",
+        "no-plusplus": "allow",
+        "no-conditional-in-test": "allow",
+        "require-to-throw-message": "allow",
+        "no-async-await": "allow",
+        "no-rest-spread-properties": "allow",
+        "no-optional-chaining": "allow",
+        "no-process-env": "allow",
+        "prefer-tag-over-role": "allow",
 
         "jsx-filename-extension": ["error", { "extensions": [".tsx"] }],
         "no-console": ["error", { "allow": ["error", "debug", "log"] }],
-        "no-autofocus": "allow", // this is useful
+        "no-autofocus": "allow",
         "no-void": ["error", { "allowAsStatement": true }],
         "array-type": [
             "error",
@@ -48,8 +49,8 @@
             }
         ],
 
-        "explicit-module-boundary-types": "allow", // too strict for now
-        "no-default-export": "allow", // not for nextjs
+        "explicit-module-boundary-types": "allow",
+        "no-default-export": "allow",
         "explicit-function-return-type": [
             "error",
             {
@@ -57,5 +58,16 @@
                 "allowFunctionsWithoutTypeParameters": true
             }
         ]
-    }
+    },
+    "overrides": [
+        {
+            "files": [
+                "packages/auth/src/fixtures/createAuthTest.ts"
+            ],
+            "rules": {
+                "@typescript-eslint/no-require-imports": "off",
+                "typescript-eslint(no-require-imports)": "allow"
+            }
+        }
+    ]
 }

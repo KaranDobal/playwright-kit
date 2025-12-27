@@ -66,7 +66,8 @@ test("loadAuthConfig allows webServer.url to be omitted when baseURL is set", as
 
   const loaded = await loadAuthConfig({ cwd: root });
   assert.equal(loaded.configFilePath, configPath);
-  assert.equal((loaded.config.webServer as any).command, "node");
+  assert.ok(loaded.config.webServer);
+  assert.equal(loaded.config.webServer.command, "node");
 });
 
 test("loadAuthConfig requires baseURL when webServer.url is omitted", async () => {
@@ -98,6 +99,59 @@ test("loadAuthConfig requires baseURL when webServer.url is omitted", async () =
 
 test("loadAuthConfig throws a user error when config is missing", async () => {
   const root = await makeTempDir();
+  await assert.rejects(
+    () => loadAuthConfig({ cwd: root }),
+    (error) => isUserError(error),
+  );
+});
+
+test("loadAuthConfig rejects unsafe profile names", async () => {
+  const root = await makeTempDir();
+  const configPath = path.join(root, "playwright.auth.config.ts");
+  await fs.writeFile(
+    configPath,
+    [
+      "export default {",
+      "  baseURL: 'https://example.com',",
+      "  profiles: {",
+      "    ' admin ': {",
+      "      validateUrl: '/',",
+      "      async login() {},",
+      "      async validate() { return { ok: true }; },",
+      "    },",
+      "  },",
+      "};",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
+
+  await assert.rejects(
+    () => loadAuthConfig({ cwd: root }),
+    (error) => isUserError(error),
+  );
+});
+
+test("loadAuthConfig requires baseURL when validateUrl is relative", async () => {
+  const root = await makeTempDir();
+  const configPath = path.join(root, "playwright.auth.config.ts");
+  await fs.writeFile(
+    configPath,
+    [
+      "export default {",
+      "  profiles: {",
+      "    admin: {",
+      "      validateUrl: '/admin',",
+      "      async login() {},",
+      "      async validate() { return { ok: true }; },",
+      "    },",
+      "  },",
+      "};",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
+
   await assert.rejects(
     () => loadAuthConfig({ cwd: root }),
     (error) => isUserError(error),

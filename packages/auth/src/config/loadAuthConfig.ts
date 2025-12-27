@@ -9,6 +9,24 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function assertSafeProfileName(profile: string): void {
+  const trimmed = profile.trim();
+  if (trimmed.length === 0 || trimmed !== profile) {
+    throw createUserError(
+      `Invalid profile name "${profile}" (must not be empty or contain leading/trailing whitespace).`,
+    );
+  }
+  if (profile.includes("/") || profile.includes("\\") || profile.includes("..")) {
+    throw createUserError(
+      `Invalid profile name "${profile}" (must not contain path separators or "..").`,
+    );
+  }
+}
+
+function isAbsoluteHttpUrl(value: string): boolean {
+  return value.startsWith("http://") || value.startsWith("https://");
+}
+
 function assertProfileConfig(
   profileName: string,
   profile: unknown,
@@ -44,6 +62,26 @@ function assertProfileConfig(
       `Auth profile "${profileName}" must set "validateUrl" (or a baseURL) either on the profile or in the root config.`,
     );
   }
+
+  // Playwright only allows relative navigation when baseURL is set.
+  // If validateUrl is relative (common), require baseURL at the profile or root level.
+  const effectiveValidateUrl =
+    (typeof profile.validateUrl === "string" && profile.validateUrl.length > 0
+      ? profile.validateUrl
+      : undefined) ??
+    (typeof global.validateUrl === "string" && global.validateUrl.length > 0
+      ? global.validateUrl
+      : undefined);
+
+  if (
+    effectiveValidateUrl &&
+    !isAbsoluteHttpUrl(effectiveValidateUrl) &&
+    !(hasProfileBaseUrl || hasGlobalBaseUrl)
+  ) {
+    throw createUserError(
+      `Auth profile "${profileName}" uses a relative validateUrl "${effectiveValidateUrl}", but no baseURL is set (set profile.baseURL or root baseURL).`,
+    );
+  }
 }
 
 function assertAuthConfig(config: unknown): asserts config is AuthConfig {
@@ -53,6 +91,10 @@ function assertAuthConfig(config: unknown): asserts config is AuthConfig {
 
   if (!isObject(config.profiles)) {
     throw createUserError(`Auth config must define "profiles" as an object.`);
+  }
+
+  for (const profileName of Object.keys(config.profiles)) {
+    assertSafeProfileName(profileName);
   }
 
   if (config.webServer !== undefined) {

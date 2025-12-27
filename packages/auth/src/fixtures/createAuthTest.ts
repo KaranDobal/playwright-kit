@@ -1,24 +1,28 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { Browser, BrowserContext, Expect, TestType } from "@playwright/test";
+import type { Expect, TestType } from "@playwright/test";
+
+type AnyFixtures = object;
+type AnyTestType = TestType<AnyFixtures, AnyFixtures>;
+type AnyExpect = Expect<unknown>;
 
 export interface CreateAuthTestOptions {
   statesDir?: string;
   defaultProfile?: string;
-  baseTest?: TestType<any, any>;
-  baseExpect?: Expect<any>;
+  baseTest?: AnyTestType;
+  baseExpect?: AnyExpect;
 }
 
-type PlaywrightTestFn = Parameters<TestType<any, any>>[1];
+type PlaywrightTestFn = (...args: unknown[]) => unknown;
 
-export type AuthTest = TestType<any, any> & {
-  withAuth(profile?: string): TestType<any, any>;
+export type AuthTest = AnyTestType & {
+  withAuth(profile?: string): AnyTestType;
   auth(profile: string, title: string, fn: PlaywrightTestFn): void;
   auth(title: string, fn: PlaywrightTestFn): void;
 };
 
-export type AuthTestWithExpect = AuthTest & { expect: Expect<any> };
+export type AuthTestWithExpect = AuthTest & { expect: AnyExpect };
 
 function resolveStatePath(options: { statesDir: string; profile: string }): string {
   const dir = path.isAbsolute(options.statesDir)
@@ -63,8 +67,8 @@ export interface AuthTestOptions {
   /** Alias for statesDir (kept for ergonomics). */
   stateDir?: string;
   defaultProfile: string;
-  baseTest?: TestType<any, any>;
-  baseExpect?: Expect<any>;
+  baseTest?: AnyTestType;
+  baseExpect?: AnyExpect;
 }
 
 export function authTest(options: AuthTestOptions): AuthTestWithExpect {
@@ -93,28 +97,21 @@ export function authTest(options: AuthTestOptions): AuthTestWithExpect {
       assertStateFileReadable(statePath, auth);
       await use(statePath);
     },
-    context: async (
-      {
-        browser,
-        baseURL,
-        _authStatePath,
-      }: { browser: Browser; baseURL: string | undefined; _authStatePath: string },
-      use: (context: BrowserContext) => Promise<void>,
+    // Override Playwright's built-in `storageState` option fixture so role switching
+    // composes with existing `test.use({ ...contextOptions })` patterns.
+    storageState: async (
+      { _authStatePath }: { _authStatePath: string },
+      use: (value: string) => Promise<void>,
     ) => {
-      const context = await browser.newContext({
-        baseURL,
-        storageState: _authStatePath,
-      });
-      await use(context);
-      await context.close();
+      await use(_authStatePath);
     },
-  });
+  } as unknown as Parameters<typeof baseTest.extend>[0]);
 
-  const withAuth = (profile?: string): TestType<any, any> => {
+  const withAuth = (profile?: string): AnyTestType => {
     const selectedProfile = profile ?? defaultProfile;
     const derived = testBase.extend({});
     derived.use({ auth: selectedProfile });
-    return derived;
+    return derived as unknown as AnyTestType;
   };
 
   const auth: AuthTest["auth"] = (
@@ -125,19 +122,22 @@ export function authTest(options: AuthTestOptions): AuthTestWithExpect {
     if (typeof b === "function") {
       const title = a;
       const fn = b;
-      (testBase as any)(title, fn);
+      (testBase as unknown as (title: string, fn: PlaywrightTestFn) => void)(title, fn);
       return;
     }
 
     const profile = a;
     const title = b;
-    const fn = c as PlaywrightTestFn;
+    const fn = c;
+    if (!fn) {
+      throw new Error(`test.auth(profile, title, fn) requires a test function.`);
+    }
     const derived = testBase.extend({});
     derived.use({ auth: profile });
-    (derived as any)(title, fn);
+    (derived as unknown as (title: string, fn: PlaywrightTestFn) => void)(title, fn);
   };
 
-  const test = testBase as AuthTestWithExpect;
+  const test = testBase as unknown as AuthTestWithExpect;
   test.withAuth = withAuth;
   test.auth = auth;
   test.expect = expect;
@@ -146,7 +146,7 @@ export function authTest(options: AuthTestOptions): AuthTestWithExpect {
 
 export function createAuthTest(options: CreateAuthTestOptions = {}): {
   test: AuthTest;
-  expect: Expect<any>;
+  expect: AnyExpect;
 } {
   let baseTest = options.baseTest;
   let baseExpect = options.baseExpect;

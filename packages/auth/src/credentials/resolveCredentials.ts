@@ -39,7 +39,13 @@ function defaultEnvCredentialsResolver(ctx: {
     );
   }
 
-  return { email: email!, password: password! };
+  if (!email || !password) {
+    throw createUserError(
+      `Missing credentials for profile "${ctx.profile}".`,
+    );
+  }
+
+  return { email, password };
 }
 
 export function resolveProfileCredentials(options: {

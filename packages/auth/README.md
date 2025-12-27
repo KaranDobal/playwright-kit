@@ -94,6 +94,8 @@ export default defineAuthConfig({
 
   profiles: {
     admin: {
+      // Recommended: set validateUrl explicitly for deterministic validation.
+      // When omitted, the CLI will fall back to "/".
       validateUrl: "/admin",
       async login(page, { credentials }) {
         await page.goto("/login");
@@ -108,6 +110,8 @@ export default defineAuthConfig({
     },
 
     user: {
+      // Recommended: set validateUrl explicitly for deterministic validation.
+      // When omitted, the CLI will fall back to "/".
       validateUrl: "/me",
       async login(page, { credentials }) {
         await page.goto("/login");
@@ -266,6 +270,7 @@ The wrapper never regenerates state; if a state file is missing/invalid it fails
 
 - Auth states: `.auth/<profile>.json`
 - Failures: `.auth/.failures/<profile>/<runId>/{trace.zip,screenshot.png,error.txt}`
+- Locks: `.auth/.locks/<profile>.lock` (prevents concurrent `setup/ensure` from overwriting state)
 
 ## `.gitignore`
 

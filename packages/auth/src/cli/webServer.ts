@@ -1,12 +1,66 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
+import path from "node:path";
 import { URL } from "node:url";
 
 import type { WebServerArgs } from "./args";
 import { createUserError } from "../internal/userError";
 
 const WEB_SERVER_POLL_INTERVAL_MS = 250;
+
+function shouldSpawnInShell(command: string): boolean {
+  // If the command includes whitespace or quotes, users are likely passing something like:
+  // - `npm run dev`
+  // - `"C:\\Program Files\\My App\\app.exe" --flag`
+  // In these cases, using the OS shell preserves existing behavior, but it also means the
+  // string is interpreted by a shell. Treat it as trusted configuration.
+  return /[\s"'`]/.test(command.trim());
+}
+
+function resolveWindowsCommand(command: string): string {
+  // Avoid `shell: true` by resolving `npm` -> `npm.cmd`, etc.
+  const hasPathSep = command.includes("\\") || command.includes("/") || command.includes(":");
+  const ext = path.extname(command);
+
+  const rawPathEnv = process.env.PATH ?? process.env.Path ?? "";
+  const pathEntries = rawPathEnv
+    .split(";")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const pathext = (process.env.PATHEXT ?? ".COM;.EXE;.BAT;.CMD")
+    .split(";")
+    .map((e) => e.trim())
+    .filter(Boolean);
+
+  const tryResolve = (fullPath: string): string | undefined => {
+    if (fs.existsSync(fullPath)) return fullPath;
+    if (!ext) {
+      for (const extension of pathext) {
+        const candidate = `${fullPath}${extension.toLowerCase()}`;
+        if (fs.existsSync(candidate)) return candidate;
+      }
+    }
+    return undefined;
+  };
+
+  if (hasPathSep) {
+    const fullPath = path.isAbsolute(command) ? command : path.resolve(command);
+    return tryResolve(fullPath) ?? command;
+  }
+
+  // Approximate Windows command resolution order: check CWD first, then PATH.
+  const fromCwd = tryResolve(path.join(process.cwd(), command));
+  if (fromCwd) return fromCwd;
+
+  for (const entry of pathEntries) {
+    const resolved = tryResolve(path.join(entry, command));
+    if (resolved) return resolved;
+  }
+
+  return command;
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -17,7 +71,7 @@ async function killProcessTree(pid: number): Promise<void> {
 
   if (process.platform === "win32") {
     const runTaskkill = async (
-      args: ReadonlyArray<string>,
+      args: readonly string[],
       timeoutMs: number,
     ): Promise<void> => {
       await new Promise<void>((resolve) => {
@@ -75,6 +129,10 @@ async function killProcessTree(pid: number): Promise<void> {
 async function isUrlReachable(url: string): Promise<boolean> {
   const parsed = new URL(url);
   const client = parsed.protocol === "https:" ? https : http;
+  const isLocalhost =
+    parsed.hostname === "localhost" ||
+    parsed.hostname === "127.0.0.1" ||
+    parsed.hostname === "::1";
 
   return new Promise((resolve) => {
     const req = client.get(
@@ -84,6 +142,9 @@ async function isUrlReachable(url: string): Promise<boolean> {
         port: parsed.port,
         path: `${parsed.pathname}${parsed.search}`,
         timeout: 1_000,
+        ...(parsed.protocol === "https:" && isLocalhost
+          ? { rejectUnauthorized: false }
+          : undefined),
       },
       (res) => {
         res.resume();
@@ -100,16 +161,30 @@ async function isUrlReachable(url: string): Promise<boolean> {
   });
 }
 
-async function waitForUrl(url: string, timeoutMs: number): Promise<void> {
+async function waitForUrlOrExit(options: {
+  url: string;
+  timeoutMs: number;
+  child: ReturnType<typeof spawn>;
+}): Promise<void> {
   const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
+  while (Date.now() - start < options.timeoutMs) {
+    if (options.child.exitCode !== null) {
+      throw createUserError(
+        `Web server exited with code ${options.child.exitCode} before becoming reachable at ${options.url}`,
+      );
+    }
     // eslint-disable-next-line no-await-in-loop
-    const ok = await isUrlReachable(url);
+    const ok = await isUrlReachable(options.url);
     if (ok) return;
     // eslint-disable-next-line no-await-in-loop
     await sleep(WEB_SERVER_POLL_INTERVAL_MS);
   }
-  throw createUserError(`Timed out waiting for web server URL: ${url}`);
+  if (options.child.exitCode !== null) {
+    throw createUserError(
+      `Web server exited with code ${options.child.exitCode} before becoming reachable at ${options.url}`,
+    );
+  }
+  throw createUserError(`Timed out waiting for web server URL: ${options.url}`);
 }
 
 export async function withWebServer<T>(
@@ -123,15 +198,22 @@ export async function withWebServer<T>(
     if (reachable) return fn();
   }
 
-  const child = spawn(webServer.command, webServer.args, {
+  const useShell = shouldSpawnInShell(webServer.command);
+  const command =
+    !useShell && process.platform === "win32"
+      ? resolveWindowsCommand(webServer.command)
+      : webServer.command;
+
+  const child = spawn(command, webServer.args, {
     stdio: "inherit",
-    shell: true,
+    shell: useShell,
     env: process.env,
     detached: process.platform !== "win32",
+    windowsHide: true,
   });
 
   try {
-    await waitForUrl(webServer.url, webServer.timeoutMs);
+    await waitForUrlOrExit({ url: webServer.url, timeoutMs: webServer.timeoutMs, child });
     return await fn();
   } finally {
     await killProcessTree(child.pid ?? 0);
