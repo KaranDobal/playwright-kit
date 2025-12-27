@@ -16,26 +16,45 @@ async function killProcessTree(pid: number): Promise<void> {
   if (!Number.isFinite(pid) || pid <= 0) return;
 
   if (process.platform === "win32") {
-    await new Promise<void>((resolve) => {
-      const taskkill = spawn("taskkill", ["/PID", String(pid), "/T", "/F"], {
-        stdio: "ignore",
-        windowsHide: true,
-      });
+    const runTaskkill = async (
+      args: ReadonlyArray<string>,
+      timeoutMs: number,
+    ): Promise<void> => {
+      await new Promise<void>((resolve) => {
+        const taskkill = spawn("taskkill", args, {
+          stdio: "ignore",
+          windowsHide: true,
+        });
 
-      const timeout = setTimeout(() => {
-        taskkill.kill();
-        resolve();
-      }, 5_000);
+        const timeout = setTimeout(() => {
+          taskkill.kill();
+          resolve();
+        }, timeoutMs);
 
-      taskkill.on("error", () => {
-        clearTimeout(timeout);
-        resolve();
+        taskkill.on("error", () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+        taskkill.on("exit", () => {
+          clearTimeout(timeout);
+          resolve();
+        });
       });
-      taskkill.on("exit", () => {
-        clearTimeout(timeout);
-        resolve();
-      });
-    });
+    };
+
+    const isPidAlive = (): boolean => {
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    // Try graceful termination first to allow cleanup; fall back to force-kill.
+    await runTaskkill(["/PID", String(pid), "/T"], 2_000);
+    await sleep(300);
+    if (isPidAlive()) await runTaskkill(["/PID", String(pid), "/T", "/F"], 5_000);
     return;
   }
 
