@@ -89,7 +89,12 @@ async function run(argv: string[]): Promise<number> {
   }
 }
 
-void (async () => {
-  const exitCode = await run(process.argv.slice(2));
-  process.exitCode = exitCode;
-})();
+run(process.argv.slice(2))
+  .then((exitCode) => {
+    process.exitCode = exitCode;
+  })
+  .catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    process.exitCode = EXIT_FAILURE;
+  });
