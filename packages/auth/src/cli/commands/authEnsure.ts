@@ -16,7 +16,7 @@ export async function authEnsure(options: {
   const availableProfiles = Object.keys(options.loaded.config.profiles);
 
   const profileNames =
-    options.profileNames?.length && options.profileNames.length > 0
+    options.profileNames && options.profileNames.length > 0
       ? options.profileNames
       : availableProfiles;
 
