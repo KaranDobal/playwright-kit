@@ -59,6 +59,9 @@ jobs:
       - name: Build workspace
         run: npm run build
 
+      - name: Verify playwright-kit CLI
+        run: ./node_modules/.bin/playwright-kit --help
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
