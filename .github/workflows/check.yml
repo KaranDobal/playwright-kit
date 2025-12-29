@@ -40,8 +40,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Typecheck
-        run: npm run typecheck
+        run: npm -w packages/auth run typecheck
 
   test:
     runs-on: ubuntu-latest
